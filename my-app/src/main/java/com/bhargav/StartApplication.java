@@ -12,7 +12,7 @@ public class StartApplication {
 
     @GetMapping("/")
     public String index(final Model model) {
-        model.addAttribute("title", "The Java Spring Application Version 1"
+        model.addAttribute("title", "The Java Spring Application Version 1");
         model.addAttribute("msg", "This app will be deployed to kubernetes using ArgoCD");
         return "index";
     }
