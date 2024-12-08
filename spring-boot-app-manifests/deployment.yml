@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: my-spring-boot-app
-        image: jenkinsproject.azurecr.io/my-spring-boot-app:30
+        image: jenkinsjavaapp.azurecr.io/jenkinsjavaapp:13
         ports:
         - containerPort: 8080
         env:
