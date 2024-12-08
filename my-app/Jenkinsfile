@@ -1,0 +1,78 @@
+pipeline {
+    agent {
+        docker {
+            image 'bhargavqwertyuiop/pipeline-image:latest'
+            args "--user root -v /var/run/docker.sock:/var/run/docker.sock"
+        }
+    }
+    stages {
+        stage("Clone") {
+            steps {
+                echo "Checking Out.........."
+                git branch: 'main', url: 'https://github.com/bhargavqwertyuiop/jenkins-final-project.git'
+            }
+        }
+        stage("Build and Pack") {
+            steps {
+                sh 'cd my-app && mvn clean package'
+            }
+        }
+        stage("Code Analysis") {
+            steps {
+                sh """
+                    cd my-app && mvn sonar:sonar \
+                    -Dsonar.projectKey=jenkins-project \
+                    -Dsonar.host.url=http://35.202.254.226:9000 \
+                    -Dsonar.login=98a5e77b3239c4e416493d97a3646c8f87c44aa0
+                """
+            }
+        }
+        stage("Build the Image") {
+            steps {
+                sh "cd my-app && docker build -t jenkins-spring-app:${env.BUILD_ID} ."
+            }
+        }
+        stage("Push to Azure Container Registry") {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'docker', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh """
+                            echo ${DOCKER_PASSWORD} | docker login jenkinsjavaapp.azurecr.io -u ${DOCKER_USERNAME} --password-stdin
+                            docker tag jenkins-spring-app:${env.BUILD_ID} jenkinsjavaapp.azurecr.io/jenkinsjavaapp:${env.BUILD_ID}
+                            docker push jenkinsjavaapp.azurecr.io/jenkinsjavaapp:${env.BUILD_ID}
+                        """
+                    }
+                }
+            }
+        }
+        stage("Update Github Manifests") {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'github-token', variable: 'GIT_TOKEN')]) {
+                        sh """
+                            # Add the workspace directory to Git's safe directory list
+                            git config --global --add safe.directory /var/lib/jenkins/workspace/project-1
+                            
+                            # Update the image tag in the deployment file
+                            sed -i 's|image: .*|image: jenkinsjavaapp.azurecr.io/jenkinsjavaapp:${env.BUILD_ID}|' spring-boot-app-manifests/deployment.yml
+                            
+                            # Configure Git
+                            git config --global user.name 'bhargavqwertyuiop'
+                            git config --global user.email 'bhargavtejai123@gmail.com'
+                            
+                            # Pull the latest changes
+                            git pull https://bhargavqwertyuiop:${GIT_TOKEN}@github.com/bhargavqwertyuiop/jenkins-final-project.git HEAD:main                        
+                            
+                            # Add and commit the changes
+                            git add spring-boot-app-manifests/deployment.yml spring-boot-app-manifests/service.yml
+                            git commit -m "Update image tag to ${env.BUILD_ID}"
+                            
+                            # Push the changes
+                            git push https://bhargavqwertyuiop:${GIT_TOKEN}@github.com/bhargavqwertyuiop/jenkins-final-project.git HEAD:main                        
+                        """
+                    }
+                }
+            }
+        }
+    }
+}
