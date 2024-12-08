@@ -23,4 +23,4 @@ spec:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod"
         imagePullSecrets:
-        - name: my-registry-secret
+        - name: my-registry-secret2
