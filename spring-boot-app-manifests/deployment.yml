@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: my-spring-boot-app
+  namespace: default
   labels:
     app: my-spring-boot-app
 spec:
@@ -17,12 +18,10 @@ spec:
       containers:
       - name: my-spring-boot-app
         image: jenkinsjavaapp.azurecr.io/jenkinsjavaapp:21
-      imagePullSecrets:
-      - name: acr-secret2
         ports:
         - containerPort: 8080
         env:
         - name: SPRING_PROFILES_ACTIVE
-          value: "prod"
-      
-        
+          value: prod
+      imagePullSecrets:
+      - name: acr-secret2
