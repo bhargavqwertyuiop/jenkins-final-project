@@ -24,4 +24,4 @@ spec:
         - name: SPRING_PROFILES_ACTIVE
           value: prod
       imagePullSecrets:
-      - name: acr-secret2
+      - name: acr-secret3
