@@ -48,6 +48,18 @@
         </dependency>
 
     </dependencies>
+<distributionManagement>
+    <repository>
+        <id>nexus-releases</id>
+        <url>http://20.191.84.149:9095/repository/maven-releases/</url>
+    </repository>
+    <snapshotRepository>
+        <id>nexus-snapshots</id>
+        <url>http://20.191.84.149:9095/repository/maven-snapshots/</url>
+    </snapshotRepository>
+</distributionManagement>
+
+         
 
     <build>
 
